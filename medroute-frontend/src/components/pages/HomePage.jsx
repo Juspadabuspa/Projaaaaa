@@ -8,7 +8,10 @@ import { useDashboard } from '../../context/DashboardContext';
 
 export const HomePage = ({ onNavigate }) => {
   const { dashboardData, loading } = useDashboard();
-
+  // Add this temporarily at the top of your HomePage return statement
+  <div className="bg-red-500 text-white p-4 m-4">
+    TEST: If you see this with red background, Tailwind is working
+  </div>
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Hero Section */}
