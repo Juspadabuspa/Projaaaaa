@@ -1,0 +1,687 @@
+import React, { useState } from 'react';
+import { Heart, AlertTriangle, CheckCircle, Calendar, User, Activity, TrendingUp, MapPin, Phone, Stethoscope, Users, Brain, Shield } from 'lucide-react';
+
+const MedRouteFrontend = () => {
+  const [currentView, setCurrentView] = useState('home');
+  const [triageData, setTriageData] = useState({
+    age: '',
+    gender: '',
+    fever: false,
+    cough: false,
+    fatigue: false,
+    difficulty_breathing: false,
+    blood_pressure: 'Normal',
+    cholesterol_level: 'Normal',
+    suspected_disease: '',
+    additional_symptoms: ''
+  });
+  const [triageResult, setTriageResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Mock dashboard data
+  const [dashboardData] = useState({
+    daily_stats: {
+      consultations_today: 147,
+      appointments_scheduled: 89,
+      emergency_cases: 12,
+      avg_severity: 6.2
+    },
+    capacity_report: {
+      'emergency': { name: 'Emergency', utilization_rate: 85, status: 'HIGH', available_slots: 3 },
+      'cardiology': { name: 'Cardiology', utilization_rate: 72, status: 'MODERATE', available_slots: 8 },
+      'general': { name: 'General Medicine', utilization_rate: 91, status: 'CRITICAL', available_slots: 2 },
+      'pediatrics': { name: 'Pediatrics', utilization_rate: 45, status: 'LOW', available_slots: 12 }
+    },
+    alerts: [
+      { type: 'CRITICAL_CAPACITY', department: 'General Medicine', message: 'General Medicine at 91% capacity' },
+      { type: 'HIGH_CAPACITY', department: 'Emergency', message: 'Emergency approaching capacity (85%)' }
+    ],
+    predictions: {
+      avg_system_utilization: 73.2,
+      recommended_staffing_adjustment: 'increase',
+      capacity_forecast_6h: 88
+    }
+  });
+
+  const mockTriageAnalysis = (data) => {
+    // Simulate ML analysis
+    let severity_score = 5;
+    let urgency_level = 'STANDARD';
+    let recommended_department = 'general';
+    let predicted_stay_hours = 2;
+    let priority_score = 50;
+
+    // Age factor
+    if (data.age > 65) severity_score += 2;
+    if (data.age < 2) severity_score += 1;
+
+    // Symptom analysis
+    if (data.difficulty_breathing) {
+      severity_score += 3;
+      urgency_level = 'EMERGENCY';
+      recommended_department = 'emergency';
+      priority_score = 95;
+      predicted_stay_hours = 6;
+    } else if (data.fever && data.cough && data.fatigue) {
+      severity_score += 2;
+      urgency_level = 'URGENT';
+      priority_score = 75;
+      predicted_stay_hours = 4;
+    } else if (data.fever || data.cough) {
+      severity_score += 1;
+      urgency_level = 'SEMI_URGENT';
+      priority_score = 65;
+      predicted_stay_hours = 3;
+    }
+
+    // Blood pressure consideration
+    if (data.blood_pressure === 'High') {
+      severity_score += 1;
+      recommended_department = 'cardiology';
+    }
+
+    // Clamp severity score
+    severity_score = Math.min(10, Math.max(1, severity_score));
+
+    return {
+      urgency_level,
+      priority_score,
+      symptom_analysis: {
+        severity_score,
+        recommended_department,
+        key_symptoms: Object.keys(data).filter(key => data[key] === true)
+      },
+      stay_prediction: {
+        predicted_stay_hours,
+        confidence: 0.85
+      },
+      recommendations: [
+        urgency_level === 'EMERGENCY' ? 'Proceed to Emergency Department immediately' : 
+        urgency_level === 'URGENT' ? 'Schedule appointment within 24 hours' :
+        'Schedule routine appointment within 3-7 days'
+      ]
+    };
+  };
+
+  const handleTriageSubmit = () => {
+    setLoading(true);
+    // Simulate API call
+    setTimeout(() => {
+      const analysis = mockTriageAnalysis(triageData);
+      setTriageResult({
+        patient_id: Math.floor(Math.random() * 10000),
+        timestamp: new Date(),
+        ml_analysis: analysis,
+        scheduling: {
+          success: true,
+          scheduled_time: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
+          assigned_doctor_id: 'DR001',
+          estimated_wait_time: analysis.urgency_level === 'EMERGENCY' ? 5 : 45
+        }
+      });
+      setLoading(false);
+    }, 2000);
+  };
+
+  const getUrgencyColor = (urgency) => {
+    const colors = {
+      'EMERGENCY': 'text-red-600 bg-red-100',
+      'URGENT': 'text-orange-600 bg-orange-100',
+      'SEMI_URGENT': 'text-yellow-600 bg-yellow-100',
+      'STANDARD': 'text-blue-600 bg-blue-100',
+      'ROUTINE': 'text-green-600 bg-green-100'
+    };
+    return colors[urgency] || colors.STANDARD;
+  };
+
+  const getCapacityColor = (status) => {
+    const colors = {
+      'CRITICAL': 'text-red-600 bg-red-100 border-red-200',
+      'HIGH': 'text-orange-600 bg-orange-100 border-orange-200',
+      'MODERATE': 'text-yellow-600 bg-yellow-100 border-yellow-200',
+      'LOW': 'text-green-600 bg-green-100 border-green-200'
+    };
+    return colors[status] || colors.MODERATE;
+  };
+
+  // Navigation Component
+  const Navigation = () => (
+    <nav className="bg-blue-600 text-white p-4 shadow-lg">
+      <div className="max-w-6xl mx-auto flex justify-between items-center">
+        <div className="flex items-center space-x-2">
+          <Heart className="w-8 h-8 text-red-400" />
+          <h1 className="text-2xl font-bold">MedRoute</h1>
+        </div>
+        <div className="flex space-x-4">
+          <button
+            onClick={() => setCurrentView('home')}
+            className={`px-4 py-2 rounded transition-colors ${currentView === 'home' ? 'bg-blue-700' : 'hover:bg-blue-500'}`}
+          >
+            Home
+          </button>
+          <button
+            onClick={() => setCurrentView('triage')}
+            className={`px-4 py-2 rounded transition-colors ${currentView === 'triage' ? 'bg-blue-700' : 'hover:bg-blue-500'}`}
+          >
+            Smart Triage
+          </button>
+          <button
+            onClick={() => setCurrentView('dashboard')}
+            className={`px-4 py-2 rounded transition-colors ${currentView === 'dashboard' ? 'bg-blue-700' : 'hover:bg-blue-500'}`}
+          >
+            Dashboard
+          </button>
+        </div>
+      </div>
+    </nav>
+  );
+
+  // Home Page Component
+  const HomePage = () => (
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* Hero Section */}
+      <div className="text-center mb-12">
+        <div className="flex justify-center mb-4">
+          <Heart className="w-16 h-16 text-blue-600" />
+        </div>
+        <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          MedRoute: Smart Hospital Navigation & Scheduling
+        </h2>
+        <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+          When every minute counts, MedRoute gets you to the right care, right away. Our intelligent triage system 
+          evaluates your symptoms and instantly routes you to the most appropriate hospital department—whether it's 
+          an emergency requiring immediate attention or a condition that can be scheduled efficiently.
+        </p>
+      </div>
+
+      {/* Feature Cards */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+          <AlertTriangle className="w-10 h-10 text-red-500 mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Instant Emergency Routing</h3>
+          <p className="text-gray-600">Symptom-based questionnaire determines threat level and directs you to the optimal hospital</p>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+          <Calendar className="w-10 h-10 text-blue-500 mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Smart Scheduling</h3>
+          <p className="text-gray-600">Seamlessly book appointments across all departments with real-time availability</p>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+          <Users className="w-10 h-10 text-green-500 mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Doctor & Patient Wellness</h3>
+          <p className="text-gray-600">Our algorithm factors in physician rest periods and patient recovery needs</p>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow">
+          <Brain className="w-10 h-10 text-purple-500 mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Integrated Care</h3>
+          <p className="text-gray-600">One platform connecting patients directly to hospital systems</p>
+        </div>
+      </div>
+
+      {/* CTA Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg p-8 text-center">
+        <h3 className="text-2xl font-bold mb-4">Stop guessing where to go for medical care</h3>
+        <p className="text-lg mb-6">
+          Let MedRoute's AI-powered triage guide you to the right place at the right time, 
+          ensuring faster treatment and better outcomes for everyone.
+        </p>
+        <button
+          onClick={() => setCurrentView('triage')}
+          className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
+        >
+          Start Smart Triage
+        </button>
+      </div>
+
+      {/* Stats Section */}
+      <div className="grid md:grid-cols-4 gap-4 mt-12">
+        <div className="text-center">
+          <div className="text-3xl font-bold text-blue-600">{dashboardData.daily_stats.consultations_today}</div>
+          <div className="text-gray-600">Consultations Today</div>
+        </div>
+        <div className="text-center">
+          <div className="text-3xl font-bold text-green-600">{dashboardData.daily_stats.appointments_scheduled}</div>
+          <div className="text-gray-600">Appointments Scheduled</div>
+        </div>
+        <div className="text-center">
+          <div className="text-3xl font-bold text-orange-600">{dashboardData.daily_stats.emergency_cases}</div>
+          <div className="text-gray-600">Emergency Cases</div>
+        </div>
+        <div className="text-center">
+          <div className="text-3xl font-bold text-purple-600">{dashboardData.predictions.avg_system_utilization}%</div>
+          <div className="text-gray-600">System Utilization</div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Triage Component
+  const TriagePage = () => (
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="bg-white rounded-lg shadow-lg p-8">
+        <div className="flex items-center mb-6">
+          <Stethoscope className="w-8 h-8 text-blue-600 mr-3" />
+          <h2 className="text-3xl font-bold text-gray-900">Smart Triage Assessment</h2>
+        </div>
+        
+        {!triageResult ? (
+          <div className="space-y-6">
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Age</label>
+                <input
+                  type="number"
+                  value={triageData.age}
+                  onChange={(e) => setTriageData({...triageData, age: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter age"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                <select
+                  value={triageData.gender}
+                  onChange={(e) => setTriageData({...triageData, gender: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">Select gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Current Symptoms</h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                {[
+                  { key: 'fever', label: 'Fever' },
+                  { key: 'cough', label: 'Cough' },
+                  { key: 'fatigue', label: 'Fatigue' },
+                  { key: 'difficulty_breathing', label: 'Difficulty Breathing' }
+                ].map(({ key, label }) => (
+                  <label key={key} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={triageData[key]}
+                      onChange={(e) => setTriageData({...triageData, [key]: e.target.checked})}
+                      className="w-5 h-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <span className="text-gray-700">{label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Blood Pressure</label>
+                <select
+                  value={triageData.blood_pressure}
+                  onChange={(e) => setTriageData({...triageData, blood_pressure: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="Normal">Normal</option>
+                  <option value="High">High</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Cholesterol Level</label>
+                <select
+                  value={triageData.cholesterol_level}
+                  onChange={(e) => setTriageData({...triageData, cholesterol_level: e.target.value})}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="Normal">Normal</option>
+                  <option value="High">High</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Additional Symptoms or Concerns</label>
+              <textarea
+                value={triageData.additional_symptoms}
+                onChange={(e) => setTriageData({...triageData, additional_symptoms: e.target.value})}
+                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-24"
+                placeholder="Describe any other symptoms or concerns..."
+              />
+            </div>
+
+            <button
+              onClick={handleTriageSubmit}
+              disabled={loading || !triageData.age || !triageData.gender}
+              className="w-full bg-blue-600 text-white py-4 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 transition-colors flex items-center justify-center space-x-2"
+            >
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Analyzing...</span>
+                </>
+              ) : (
+                <>
+                  <Brain className="w-5 h-5" />
+                  <span>Get AI Triage Results</span>
+                </>
+              )}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Triage Results */}
+            <div className="border-l-4 border-blue-500 bg-blue-50 p-6 rounded-lg">
+              <div className="flex items-center mb-4">
+                <CheckCircle className="w-8 h-8 text-green-600 mr-3" />
+                <h3 className="text-xl font-semibold">Triage Analysis Complete</h3>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-semibold mb-2">Priority Assessment</h4>
+                  <div className={`inline-block px-4 py-2 rounded-full text-sm font-medium ${getUrgencyColor(triageResult.ml_analysis.urgency_level)}`}>
+                    {triageResult.ml_analysis.urgency_level}
+                  </div>
+                  <div className="mt-2 text-sm text-gray-600">
+                    Priority Score: {triageResult.ml_analysis.priority_score}/100
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="font-semibold mb-2">Severity Analysis</h4>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-32 bg-gray-200 rounded-full h-3">
+                      <div 
+                        className="bg-blue-600 h-3 rounded-full" 
+                        style={{ width: `${(triageResult.ml_analysis.symptom_analysis.severity_score / 10) * 100}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm font-medium">
+                      {triageResult.ml_analysis.symptom_analysis.severity_score}/10
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Recommended Department */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+              <div className="flex items-center mb-4">
+                <MapPin className="w-6 h-6 text-green-600 mr-2" />
+                <h4 className="text-lg font-semibold">Recommended Department</h4>
+              </div>
+              <div className="text-xl font-bold text-green-800 capitalize">
+                {triageResult.ml_analysis.symptom_analysis.recommended_department.replace('_', ' ')}
+              </div>
+              <div className="text-sm text-green-700 mt-1">
+                Estimated stay: {triageResult.ml_analysis.stay_prediction.predicted_stay_hours} hours
+              </div>
+            </div>
+
+            {/* Scheduling Information */}
+            {triageResult.scheduling.success && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <div className="flex items-center mb-4">
+                  <Calendar className="w-6 h-6 text-blue-600 mr-2" />
+                  <h4 className="text-lg font-semibold">Appointment Scheduled</h4>
+                </div>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-gray-600">Scheduled Time</div>
+                    <div className="font-semibold">
+                      {triageResult.scheduling.scheduled_time.toLocaleString()}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-gray-600">Estimated Wait</div>
+                    <div className="font-semibold">
+                      {triageResult.scheduling.estimated_wait_time} minutes
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Recommendations */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+              <h4 className="text-lg font-semibold mb-3 flex items-center">
+                <Shield className="w-6 h-6 text-yellow-600 mr-2" />
+                Recommendations
+              </h4>
+              <ul className="space-y-2">
+                {triageResult.ml_analysis.recommendations.map((rec, index) => (
+                  <li key={index} className="flex items-start space-x-2">
+                    <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+                    <span>{rec}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="flex space-x-4">
+              <button
+                onClick={() => {
+                  setTriageResult(null);
+                  setTriageData({
+                    age: '',
+                    gender: '',
+                    fever: false,
+                    cough: false,
+                    fatigue: false,
+                    difficulty_breathing: false,
+                    blood_pressure: 'Normal',
+                    cholesterol_level: 'Normal',
+                    suspected_disease: '',
+                    additional_symptoms: ''
+                  });
+                }}
+                className="flex-1 bg-gray-600 text-white py-3 rounded-lg font-semibold hover:bg-gray-700 transition-colors"
+              >
+                New Assessment
+              </button>
+              <button
+                onClick={() => setCurrentView('dashboard')}
+                className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              >
+                View Hospital Status
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // Dashboard Component
+  const DashboardPage = () => (
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="flex items-center mb-8">
+        <Activity className="w-8 h-8 text-blue-600 mr-3" />
+        <h2 className="text-3xl font-bold text-gray-900">Hospital Dashboard</h2>
+      </div>
+
+      {/* Daily Stats */}
+      <div className="grid md:grid-cols-4 gap-6 mb-8">
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-2xl font-bold text-blue-600">{dashboardData.daily_stats.consultations_today}</div>
+              <div className="text-sm text-gray-600">Consultations Today</div>
+            </div>
+            <User className="w-8 h-8 text-blue-500" />
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-2xl font-bold text-green-600">{dashboardData.daily_stats.appointments_scheduled}</div>
+              <div className="text-sm text-gray-600">Appointments Scheduled</div>
+            </div>
+            <Calendar className="w-8 h-8 text-green-500" />
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-2xl font-bold text-red-600">{dashboardData.daily_stats.emergency_cases}</div>
+              <div className="text-sm text-gray-600">Emergency Cases</div>
+            </div>
+            <AlertTriangle className="w-8 h-8 text-red-500" />
+          </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-2xl font-bold text-purple-600">{dashboardData.daily_stats.avg_severity}</div>
+              <div className="text-sm text-gray-600">Avg Severity Score</div>
+            </div>
+            <TrendingUp className="w-8 h-8 text-purple-500" />
+          </div>
+        </div>
+      </div>
+
+      {/* Department Capacity */}
+      <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <h3 className="text-xl font-semibold mb-6">Department Capacity</h3>
+        <div className="grid md:grid-cols-2 gap-6">
+          {Object.entries(dashboardData.capacity_report).map(([deptId, info]) => (
+            <div key={deptId} className={`p-4 rounded-lg border-2 ${getCapacityColor(info.status)}`}>
+              <div className="flex justify-between items-center mb-2">
+                <h4 className="font-semibold">{info.name}</h4>
+                <span className="text-sm font-medium">{info.status}</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+                <div 
+                  className={`h-3 rounded-full ${
+                    info.status === 'CRITICAL' ? 'bg-red-500' :
+                    info.status === 'HIGH' ? 'bg-orange-500' :
+                    info.status === 'MODERATE' ? 'bg-yellow-500' : 'bg-green-500'
+                  }`}
+                  style={{ width: `${info.utilization_rate}%` }}
+                ></div>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span>{info.utilization_rate}% utilized</span>
+                <span>{info.available_slots} slots available</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* System Alerts */}
+      <div className="grid lg:grid-cols-2 gap-8">
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h3 className="text-xl font-semibold mb-6 flex items-center">
+            <AlertTriangle className="w-6 h-6 text-red-500 mr-2" />
+            System Alerts
+          </h3>
+          {dashboardData.alerts.length > 0 ? (
+            <div className="space-y-3">
+              {dashboardData.alerts.map((alert, index) => (
+                <div key={index} className={`p-4 rounded-lg border-l-4 ${
+                  alert.type === 'CRITICAL_CAPACITY' ? 'bg-red-50 border-red-500' : 'bg-orange-50 border-orange-500'
+                }`}>
+                  <div className="font-medium">{alert.department}</div>
+                  <div className="text-sm text-gray-600">{alert.message}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-gray-500 text-center py-8">No alerts at this time</div>
+          )}
+        </div>
+
+        {/* Predictions */}
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h3 className="text-xl font-semibold mb-6 flex items-center">
+            <TrendingUp className="w-6 h-6 text-blue-500 mr-2" />
+            System Predictions
+          </h3>
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <div className="text-sm text-gray-600">System Utilization</div>
+              <div className="text-2xl font-bold text-blue-600">{dashboardData.predictions.avg_system_utilization}%</div>
+            </div>
+            <div className="p-4 bg-green-50 rounded-lg">
+              <div className="text-sm text-gray-600">Staffing Recommendation</div>
+              <div className="text-lg font-semibold text-green-600 capitalize">{dashboardData.predictions.recommended_staffing_adjustment}</div>
+            </div>
+            <div className="p-4 bg-yellow-50 rounded-lg">
+              <div className="text-sm text-gray-600">6-Hour Capacity Forecast</div>
+              <div className="text-lg font-semibold text-yellow-600">{dashboardData.predictions.capacity_forecast_6h}%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="mt-8 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-lg p-6">
+        <h3 className="text-xl font-semibold mb-4">Quick Actions</h3>
+        <div className="grid md:grid-cols-3 gap-4">
+          <button className="bg-white bg-opacity-20 hover:bg-opacity-30 p-4 rounded-lg transition-colors">
+            <Phone className="w-6 h-6 mb-2" />
+            <div className="font-medium">Emergency Alert</div>
+            <div className="text-sm opacity-90">Notify all departments</div>
+          </button>
+          <button className="bg-white bg-opacity-20 hover:bg-opacity-30 p-4 rounded-lg transition-colors">
+            <Users className="w-6 h-6 mb-2" />
+            <div className="font-medium">Staff Allocation</div>
+            <div className="text-sm opacity-90">Optimize staff distribution</div>
+          </button>
+          <button 
+            onClick={() => setCurrentView('triage')}
+            className="bg-white bg-opacity-20 hover:bg-opacity-30 p-4 rounded-lg transition-colors"
+          >
+            <Stethoscope className="w-6 h-6 mb-2" />
+            <div className="font-medium">New Triage</div>
+            <div className="text-sm opacity-90">Start patient assessment</div>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navigation />
+      
+      {currentView === 'home' && <HomePage />}
+      {currentView === 'triage' && <TriagePage />}
+      {currentView === 'dashboard' && <DashboardPage />}
+      
+      {/* Footer */}
+      <footer className="bg-gray-800 text-white py-8 mt-12">
+        <div className="max-w-6xl mx-auto px-4 text-center">
+          <div className="flex justify-center items-center mb-4">
+            <Heart className="w-6 h-6 text-red-400 mr-2" />
+            <span className="text-xl font-semibold">MedRoute</span>
+          </div>
+          <p className="text-gray-400 mb-4">
+            Intelligent hospital navigation and scheduling for better healthcare outcomes
+          </p>
+          <div className="flex justify-center space-x-6 text-sm">
+            <button className="hover:text-blue-400 transition-colors">Privacy Policy</button>
+            <button className="hover:text-blue-400 transition-colors">Terms of Service</button>
+            <button className="hover:text-blue-400 transition-colors">Contact Support</button>
+          </div>
+          <div className="mt-4 text-xs text-gray-500">
+            © 2025 MedRoute. All rights reserved. | Powered by AI-driven healthcare technology
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default MedRouteFrontend;
