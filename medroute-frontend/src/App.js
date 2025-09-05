@@ -176,12 +176,17 @@ const App = () => {
                           
                           {/* Patient Mode Controls */}
                           {userMode === 'patient' && (
-                            <button
-                              onClick={() => handleNavigate('entry')}
-                              className="text-gray-600 hover:text-gray-800 text-sm font-medium"
-                            >
-                              Change Mode
-                            </button>
+                            <div className="flex items-center space-x-3">
+                              <span className="text-sm text-gray-600">
+                                Patient Mode
+                              </span>
+                              <button
+                                onClick={handleLogout}
+                                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                              >
+                                Change Mode
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>

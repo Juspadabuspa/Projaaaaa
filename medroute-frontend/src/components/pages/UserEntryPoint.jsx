@@ -16,7 +16,7 @@ import {
 import { useUserMode } from '../../context/UserModeContext';
 import { hospitalRouter } from '../../services/hospitalRoutingService';
 
-export const UserEntryPoint = ({ onNavigate }) => {
+export const UserEntryPoint = ({ onNavigate, onUserModeSelect }) => {
   const { initializePatientMode, initializeAdminMode, triggerEmergency } = useUserMode();
   const [showEmergencyConfirm, setShowEmergencyConfirm] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
@@ -40,11 +40,8 @@ export const UserEntryPoint = ({ onNavigate }) => {
 
   const handlePatientModeSelect = (mode) => {
     initializePatientMode(mode);
-    if (mode === 'unknown') {
-      onNavigate('triage');
-    } else {
-      onNavigate('known-condition');
-    }
+    // Use the new onUserModeSelect function from App.js
+    onUserModeSelect(mode);
   };
 
   const handleAdminAccess = () => {
