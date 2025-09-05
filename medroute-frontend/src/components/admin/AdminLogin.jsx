@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useUserMode } from '../../context/UserModeContext';
 
-export const AdminLogin = ({ onNavigate }) => {
+export const AdminLogin = ({ onNavigate, onLogin }) => {
   const { initializeAdminMode } = useUserMode();
   const [credentials, setCredentials] = useState({
     username: '',
@@ -54,6 +54,7 @@ export const AdminLogin = ({ onNavigate }) => {
 
         if (isValid) {
           initializeAdminMode();
+          onLogin('admin'); // Now this will work
           onNavigate('dashboard');
         } else {
           setError('Invalid username or password');

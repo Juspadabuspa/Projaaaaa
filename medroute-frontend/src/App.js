@@ -1,4 +1,4 @@
-// src/App.js - Complete version with all pages
+// src/App.js - Complete version with all pages and admin logout
 import React, { useState } from 'react';
 import { AppointmentProvider } from './context/AppointmentContext';
 import { TriageProvider } from './context/TriageContext.jsx';
@@ -18,9 +18,22 @@ import ErrorBoundary from './components/ErrorBoundary';
 
 const App = () => {
   const [currentPage, setCurrentPage] = useState('entry'); // Start with entry point
+  const [userMode, setUserMode] = useState(null); // 'admin', 'patient', or null
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const handleNavigate = (page) => {
     setCurrentPage(page);
+  };
+
+  const handleLogin = (mode) => {
+    setUserMode(mode);
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    setUserMode(null);
+    setIsLoggedIn(false);
+    setCurrentPage('entry'); // Return to starting page
   };
 
   const renderCurrentPage = () => {
@@ -44,7 +57,7 @@ const App = () => {
         return <DashboardPage onNavigate={handleNavigate} />;
       
       case 'admin-login':
-        return <AdminLogin onNavigate={handleNavigate} />;
+        return <AdminLogin onNavigate={handleNavigate} onLogin={handleLogin} />;
       
       case 'scheduling':
         return <SchedulingDashboard onNavigate={handleNavigate} />;
@@ -62,7 +75,7 @@ const App = () => {
             <TriageProvider>
               <div className="min-h-screen bg-gray-50">
                 {/* Navigation Bar (only show on certain pages) */}
-                {['home', 'triage', 'known-condition', 'dashboard'].includes(currentPage) && (
+                {['home', 'triage', 'known-condition', 'dashboard', 'scheduling'].includes(currentPage) && (
                   <nav className="bg-white shadow-sm border-b border-gray-200">
                     <div className="max-w-7xl mx-auto px-4">
                       <div className="flex justify-between items-center h-16">
@@ -74,56 +87,103 @@ const App = () => {
                             MedRoute
                           </button>
                           <div className="flex space-x-4">
-                            <button
-                              onClick={() => handleNavigate('home')}
-                              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                                currentPage === 'home'
-                                  ? 'bg-blue-100 text-blue-700'
-                                  : 'text-gray-500 hover:text-gray-700'
-                              }`}
-                            >
-                              Home
-                            </button>
-                            <button
-                              onClick={() => handleNavigate('triage')}
-                              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                                currentPage === 'triage'
-                                  ? 'bg-blue-100 text-blue-700'
-                                  : 'text-gray-500 hover:text-gray-700'
-                              }`}
-                            >
-                              Triage
-                            </button>
-                            <button
-                              onClick={() => handleNavigate('known-condition')}
-                              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                                currentPage === 'known-condition'
-                                  ? 'bg-blue-100 text-blue-700'
-                                  : 'text-gray-500 hover:text-gray-700'
-                              }`}
-                            >
-                              Find Care
-                            </button>
-                            <button
-                              onClick={() => handleNavigate('dashboard')}
-                              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                                currentPage === 'dashboard'
-                                  ? 'bg-blue-100 text-blue-700'
-                                  : 'text-gray-500 hover:text-gray-700'
-                              }`}
-                            >
-                              Dashboard
-                            </button>
+                            {userMode !== 'admin' && (
+                              <>
+                                <button
+                                  onClick={() => handleNavigate('home')}
+                                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                    currentPage === 'home'
+                                      ? 'bg-blue-100 text-blue-700'
+                                      : 'text-gray-500 hover:text-gray-700'
+                                  }`}
+                                >
+                                  Home
+                                </button>
+                                <button
+                                  onClick={() => handleNavigate('triage')}
+                                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                    currentPage === 'triage'
+                                      ? 'bg-blue-100 text-blue-700'
+                                      : 'text-gray-500 hover:text-gray-700'
+                                  }`}
+                                >
+                                  Triage
+                                </button>
+                                <button
+                                  onClick={() => handleNavigate('known-condition')}
+                                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                    currentPage === 'known-condition'
+                                      ? 'bg-blue-100 text-blue-700'
+                                      : 'text-gray-500 hover:text-gray-700'
+                                  }`}
+                                >
+                                  Find Care
+                                </button>
+                              </>
+                            )}
+                            {userMode === 'admin' && (
+                              <>
+                                <button
+                                  onClick={() => handleNavigate('dashboard')}
+                                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                    currentPage === 'dashboard'
+                                      ? 'bg-blue-100 text-blue-700'
+                                      : 'text-gray-500 hover:text-gray-700'
+                                  }`}
+                                >
+                                  Dashboard
+                                </button>
+                                <button
+                                  onClick={() => handleNavigate('scheduling')}
+                                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                                    currentPage === 'scheduling'
+                                      ? 'bg-blue-100 text-blue-700'
+                                      : 'text-gray-500 hover:text-gray-700'
+                                  }`}
+                                >
+                                  Appointments
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                         
-                        {/* Emergency Button in nav */}
-                        <button
-                          onClick={() => handleNavigate('emergency')}
-                          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                        >
-                          Emergency
-                        </button>
+                        <div className="flex items-center space-x-4">
+                          {/* Emergency Button */}
+                          {userMode !== 'admin' && (
+                            <button
+                              onClick={() => handleNavigate('emergency')}
+                              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                            >
+                              Emergency
+                            </button>
+                          )}
+                          
+                          {/* Admin Controls */}
+                          {userMode === 'admin' && (
+                            <div className="flex items-center space-x-3">
+                              <span className="text-sm text-gray-600">
+                                Admin Mode
+                              </span>
+                              <button
+                                onClick={handleLogout}
+                                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                              >
+                                Logout
+                              </button>
+                            </div>
+                          )}
+                          
+                          {/* Patient Mode Controls */}
+                          {userMode === 'patient' && (
+                            <button
+                              onClick={() => handleNavigate('entry')}
+                              className="text-gray-600 hover:text-gray-800 text-sm font-medium"
+                            >
+                              Change Mode
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </nav>
