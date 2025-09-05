@@ -1,4 +1,4 @@
-// src/components/pages/UserEntryPoint.jsx
+// src/components/pages/UserEntryPoint.jsx - Fixed version
 import React, { useState } from 'react';
 import { 
   Heart, 
@@ -40,8 +40,20 @@ export const UserEntryPoint = ({ onNavigate, onUserModeSelect }) => {
 
   const handlePatientModeSelect = (mode) => {
     initializePatientMode(mode);
-    // Use the new onUserModeSelect function from App.js
-    onUserModeSelect(mode);
+    
+    // Check if onUserModeSelect prop exists (new App.js version)
+    if (onUserModeSelect && typeof onUserModeSelect === 'function') {
+      onUserModeSelect(mode);
+    } else {
+      // Fallback to direct navigation (old App.js version)
+      if (mode === 'unknown') {
+        onNavigate('triage');
+      } else if (mode === 'known') {
+        onNavigate('known-condition');
+      } else {
+        onNavigate('home');
+      }
+    }
   };
 
   const handleAdminAccess = () => {

@@ -30,6 +30,19 @@ const App = () => {
     setIsLoggedIn(true);
   };
 
+  const handleUserModeSelect = (mode) => {
+    setUserMode('patient');
+    setIsLoggedIn(true);
+    // Navigate based on the specific patient mode selected
+    if (mode === 'unknown') {
+      handleNavigate('triage');
+    } else if (mode === 'known') {
+      handleNavigate('known-condition');
+    } else {
+      handleNavigate('home');
+    }
+  };
+
   const handleLogout = () => {
     setUserMode(null);
     setIsLoggedIn(false);
@@ -39,7 +52,7 @@ const App = () => {
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'entry':
-        return <UserEntryPoint onNavigate={handleNavigate} />;
+        return <UserEntryPoint onNavigate={handleNavigate} onUserModeSelect={handleUserModeSelect} />;
       
       case 'home':
         return <HomePage onNavigate={handleNavigate} />;
@@ -63,7 +76,7 @@ const App = () => {
         return <SchedulingDashboard onNavigate={handleNavigate} />;
       
       default:
-        return <UserEntryPoint onNavigate={handleNavigate} />;
+        return <UserEntryPoint onNavigate={handleNavigate} onUserModeSelect={handleUserModeSelect} />;
     }
   };
 
