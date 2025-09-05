@@ -1,100 +1,104 @@
-// src/App.js
+// frontend/src/App.js
 import React, { useState } from 'react';
-import { Navigation } from './components/layout/Navigation';
-import { Footer } from './components/layout/Footer';
-import { HomePage } from './components/pages/HomePage';
-import { TriagePage } from './components/pages/TriagePage';
-import { DashboardPage } from './components/pages/DashboardPage';
-import { UserEntryPoint } from './components/pages/UserEntryPoint';
-import { EmergencyRouting } from './components/pages/EmergencyRouting';
-import { KnownConditionPage } from './components/pages/KnownConditionPage';
-import { AdminLogin } from './components/admin/AdminLogin';
+import { AppointmentProvider } from './context/AppointmentContext';
 import { TriageProvider } from './context/TriageContext';
-import { DashboardProvider } from './context/DashboardContext';
-import { UserModeProvider, useUserMode } from './context/UserModeContext';
+import SchedulingDashboard from './components/SchedulingDashboard';
+import TriagePage from './components/TriagePage';
+import ErrorBoundary from './components/ErrorBoundary';
 
-const AppContent = () => {
-  const [currentView, setCurrentView] = useState('entry');
-  const { userType, isEmergency, resetUserMode } = useUserMode();
-
-  const handleNavigate = (view) => {
-    setCurrentView(view);
-  };
-
-  const handleGoHome = () => {
-    if (userType) {
-      setCurrentView('home');
-    } else {
-      resetUserMode();
-      setCurrentView('entry');
-    }
-  };
-
-  const renderCurrentPage = () => {
-    // Emergency always takes priority
-    if (isEmergency && currentView === 'emergency') {
-      return <EmergencyRouting onNavigate={handleNavigate} />;
-    }
-
-    switch (currentView) {
-      case 'entry':
-        return <UserEntryPoint onNavigate={handleNavigate} />;
-      case 'home':
-        return <HomePage onNavigate={handleNavigate} />;
-      case 'triage':
-        return <TriagePage onNavigate={handleNavigate} />;
-      case 'known-condition':
-        return <KnownConditionPage onNavigate={handleNavigate} />;
-      case 'dashboard':
-        return userType === 'admin' ? 
-          <DashboardPage onNavigate={handleNavigate} /> : 
-          <UserEntryPoint onNavigate={handleNavigate} />;
-      case 'emergency':
-        return <EmergencyRouting onNavigate={handleNavigate} />;
-      case 'admin-login':
-        return <AdminLogin onNavigate={handleNavigate} />;
-      default:
-        return <UserEntryPoint onNavigate={handleNavigate} />;
-    }
-  };
-
-  const shouldShowNavigation = () => {
-    // Hide navigation on entry point and emergency pages
-    return !['entry', 'emergency', 'admin-login'].includes(currentView);
-  };
-
-  const shouldShowFooter = () => {
-    // Hide footer on emergency pages
-    return !['emergency'].includes(currentView);
-  };
+const App = () => {
+  const [currentPage, setCurrentPage] = useState('scheduling');
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {shouldShowNavigation() && (
-        <Navigation 
-          currentView={currentView} 
-          onNavigate={handleNavigate}
-          onHome={handleGoHome}
-          userType={userType}
-        />
-      )}
-      <main className="flex-1">
-        {renderCurrentPage()}
-      </main>
-      {shouldShowFooter() && <Footer />}
-    </div>
+    <ErrorBoundary>
+      <AppointmentProvider>
+        <TriageProvider>
+          <div className="min-h-screen bg-gray-50">
+            {/* Navigation */}
+            <nav className="bg-white shadow-sm border-b border-gray-200">
+              <div className="max-w-7xl mx-auto px-4">
+                <div className="flex justify-between items-center h-16">
+                  <div className="flex items-center space-x-8">
+                    <h1 className="text-xl font-bold text-gray-900">Hospital Management</h1>
+                    <div className="flex space-x-4">
+                      <button
+                        onClick={() => setCurrentPage('scheduling')}
+                        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          currentPage === 'scheduling'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        Scheduling
+                      </button>
+                      <button
+                        onClick={() => setCurrentPage('triage')}
+                        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          currentPage === 'triage'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        Triage
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Connection Status Indicator */}
+                  <ConnectionStatus />
+                </div>
+              </div>
+            </nav>
+
+            {/* Main Content */}
+            <main className="min-h-screen">
+              {currentPage === 'scheduling' && <SchedulingDashboard />}
+              {currentPage === 'triage' && <TriagePage />}
+            </main>
+          </div>
+        </TriageProvider>
+      </AppointmentProvider>
+    </ErrorBoundary>
   );
 };
 
-const App = () => {
+// Connection Status Component
+const ConnectionStatus = () => {
+  const [connectionStatus, setConnectionStatus] = useState('checking');
+
+  React.useEffect(() => {
+    const checkConnection = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000/api'}/health`);
+        if (response.ok) {
+          setConnectionStatus('connected');
+        } else {
+          setConnectionStatus('error');
+        }
+      } catch (error) {
+        setConnectionStatus('error');
+      }
+    };
+
+    checkConnection();
+    const interval = setInterval(checkConnection, 30000); // Check every 30 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const statusConfig = {
+    checking: { color: 'bg-yellow-400', text: 'Checking...' },
+    connected: { color: 'bg-green-400', text: 'Connected' },
+    error: { color: 'bg-red-400', text: 'Disconnected' }
+  };
+
+  const config = statusConfig[connectionStatus];
+
   return (
-    <DashboardProvider>
-      <TriageProvider>
-        <UserModeProvider>
-          <AppContent />
-        </UserModeProvider>
-      </TriageProvider>
-    </DashboardProvider>
+    <div className="flex items-center space-x-2">
+      <div className={`w-2 h-2 rounded-full ${config.color}`}></div>
+      <span className="text-xs text-gray-500">{config.text}</span>
+    </div>
   );
 };
 

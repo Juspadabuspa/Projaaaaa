@@ -1,7 +1,7 @@
 # medroute_api_server.py
 """
-Flask API Server for MedRoute Frontend
-Provides REST endpoints for hospital and capacity data
+Enhanced Flask API Server for MedRoute Frontend
+Provides REST endpoints for appointments, triage, and facility data
 """
 
 from flask import Flask, jsonify, request
@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
 import math
+import uuid
 
 load_dotenv()
 
@@ -103,7 +104,376 @@ def get_specialties_from_departments(facility_id):
         print(f"Error getting specialties for facility {facility_id}: {e}")
         return ['general']
 
-# API Routes
+# NEW: Appointment Management Routes
+
+@app.route('/api/appointments', methods=['GET'])
+def get_appointments():
+    """Get all appointments with optional filtering"""
+    try:
+        # Get query parameters
+        department = request.args.get('department')
+        doctor = request.args.get('doctor')
+        date_from = request.args.get('date_from')
+        date_to = request.args.get('date_to')
+        status = request.args.get('status')
+        
+        # Build query
+        query = {}
+        if department and department != 'all':
+            query['department'] = department
+        if doctor and doctor != 'all':
+            query['doctorId'] = doctor
+        if status and status != 'all':
+            query['status'] = status
+        if date_from or date_to:
+            date_query = {}
+            if date_from:
+                date_query['$gte'] = datetime.fromisoformat(date_from.replace('Z', '+00:00'))
+            if date_to:
+                date_query['$lte'] = datetime.fromisoformat(date_to.replace('Z', '+00:00'))
+            query['dateTime'] = date_query
+        
+        # Get appointments from database
+        appointments_collection = db.get_collection('appointments')
+        appointments = list(appointments_collection.find(query))
+        
+        # If no appointments in database, return mock data for demo
+        if not appointments:
+            appointments = generate_mock_appointments()
+        
+        # Convert ObjectId and datetime to strings
+        for apt in appointments:
+            if '_id' in apt:
+                apt['_id'] = str(apt['_id'])
+            if 'dateTime' in apt and isinstance(apt['dateTime'], datetime):
+                apt['dateTime'] = apt['dateTime'].isoformat()
+        
+        return jsonify(appointments)
+        
+    except Exception as e:
+        print(f"Error fetching appointments: {e}")
+        return jsonify({'error': 'Failed to fetch appointments'}), 500
+
+def generate_mock_appointments():
+    """Generate mock appointments for demo purposes"""
+    import random
+    
+    mock_appointments = []
+    today = datetime.now()
+    
+    departments = [
+        {'id': 'emergency', 'name': 'Emergency', 'color': 'red'},
+        {'id': 'general', 'name': 'General Medicine', 'color': 'blue'},
+        {'id': 'cardiology', 'name': 'Cardiology', 'color': 'purple'},
+        {'id': 'pediatrics', 'name': 'Pediatrics', 'color': 'green'},
+        {'id': 'orthopedics', 'name': 'Orthopedics', 'color': 'orange'}
+    ]
+    
+    doctors = [
+        {'id': 'dr_smith', 'name': 'Dr. Smith', 'department': 'emergency'},
+        {'id': 'dr_johnson', 'name': 'Dr. Johnson', 'department': 'general'},
+        {'id': 'dr_williams', 'name': 'Dr. Williams', 'department': 'cardiology'},
+        {'id': 'dr_brown', 'name': 'Dr. Brown', 'department': 'pediatrics'},
+        {'id': 'dr_davis', 'name': 'Dr. Davis', 'department': 'orthopedics'}
+    ]
+    
+    # Generate appointments for next 7 days
+    for day_offset in range(7):
+        current_date = today + timedelta(days=day_offset)
+        
+        # Skip weekends
+        if current_date.weekday() >= 5:
+            continue
+            
+        # Generate 5-10 appointments per day
+        for i in range(random.randint(5, 10)):
+            department = random.choice(departments)
+            doctor = next((d for d in doctors if d['department'] == department['id']), doctors[0])
+            
+            # Random time between 8 AM and 5 PM
+            hour = random.randint(8, 16)
+            minute = random.choice([0, 30])
+            
+            appointment_time = current_date.replace(hour=hour, minute=minute, second=0, microsecond=0)
+            
+            appointment = {
+                'id': f"apt_{current_date.strftime('%Y%m%d')}_{i}",
+                'patientName': f"Patient {random.randint(100, 999)}",
+                'patientId': f"P{random.randint(1000, 9999)}",
+                'phone': f"+27 {random.randint(100000000, 999999999)}",
+                'department': department['id'],
+                'departmentName': department['name'],
+                'departmentColor': department['color'],
+                'doctor': doctor['name'],
+                'doctorId': doctor['id'],
+                'dateTime': appointment_time.isoformat(),
+                'duration': random.choice([30, 45, 60]),
+                'condition': random.choice(['Routine Check-up', 'Follow-up', 'New Patient', 'Consultation']),
+                'status': random.choice(['pending', 'confirmed', 'completed']),
+                'priority': random.choice(['low', 'medium', 'high']),
+                'notes': 'Sample appointment',
+                'insuranceProvider': random.choice(['Discovery', 'Momentum', 'Bonitas', 'None'])
+            }
+            mock_appointments.append(appointment)
+    
+    return mock_appointments
+
+@app.route('/api/appointments', methods=['POST'])
+def create_appointment():
+    """Create a new appointment"""
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['patientName', 'phone', 'department', 'doctor', 'dateTime', 'condition']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+        
+        # Create appointment document
+        appointment = {
+            'id': str(uuid.uuid4()),
+            'patientName': data['patientName'],
+            'patientId': data.get('patientId', ''),
+            'phone': data['phone'],
+            'department': data['department'],
+            'departmentName': data.get('departmentName', ''),
+            'departmentColor': data.get('departmentColor', 'blue'),
+            'doctor': data['doctor'],
+            'doctorId': data.get('doctorId', data['doctor']),
+            'dateTime': datetime.fromisoformat(data['dateTime'].replace('Z', '+00:00')),
+            'duration': int(data.get('duration', 30)),
+            'condition': data['condition'],
+            'status': data.get('status', 'pending'),
+            'priority': data.get('priority', 'medium'),
+            'notes': data.get('notes', ''),
+            'insuranceProvider': data.get('insuranceProvider', 'None'),
+            'createdAt': datetime.utcnow(),
+            'updatedAt': datetime.utcnow()
+        }
+        
+        # Insert into database
+        appointments_collection = db.get_collection('appointments')
+        result = appointments_collection.insert_one(appointment)
+        appointment['_id'] = str(result.inserted_id)
+        appointment['dateTime'] = appointment['dateTime'].isoformat()
+        appointment['createdAt'] = appointment['createdAt'].isoformat()
+        appointment['updatedAt'] = appointment['updatedAt'].isoformat()
+        
+        return jsonify(appointment), 201
+        
+    except Exception as e:
+        print(f"Error creating appointment: {e}")
+        return jsonify({'error': 'Failed to create appointment'}), 500
+
+@app.route('/api/appointments/<appointment_id>', methods=['PUT'])
+def update_appointment(appointment_id):
+    """Update an existing appointment"""
+    try:
+        data = request.get_json()
+        
+        # Prepare update data
+        update_data = {}
+        
+        # Fields that can be updated
+        updatable_fields = [
+            'patientName', 'patientId', 'phone', 'department', 'departmentName',
+            'departmentColor', 'doctor', 'doctorId', 'duration', 'condition',
+            'status', 'priority', 'notes', 'insuranceProvider'
+        ]
+        
+        for field in updatable_fields:
+            if field in data:
+                update_data[field] = data[field]
+        
+        # Handle dateTime separately
+        if 'dateTime' in data:
+            if isinstance(data['dateTime'], str):
+                update_data['dateTime'] = datetime.fromisoformat(data['dateTime'].replace('Z', '+00:00'))
+            else:
+                update_data['dateTime'] = data['dateTime']
+        
+        update_data['updatedAt'] = datetime.utcnow()
+        
+        # Update in database
+        appointments_collection = db.get_collection('appointments')
+        result = appointments_collection.update_one(
+            {'id': appointment_id},
+            {'$set': update_data}
+        )
+        
+        if result.matched_count == 0:
+            return jsonify({'error': 'Appointment not found'}), 404
+        
+        # Get updated appointment
+        updated_appointment = appointments_collection.find_one({'id': appointment_id})
+        if updated_appointment:
+            updated_appointment['_id'] = str(updated_appointment['_id'])
+            if isinstance(updated_appointment.get('dateTime'), datetime):
+                updated_appointment['dateTime'] = updated_appointment['dateTime'].isoformat()
+            if isinstance(updated_appointment.get('updatedAt'), datetime):
+                updated_appointment['updatedAt'] = updated_appointment['updatedAt'].isoformat()
+            if isinstance(updated_appointment.get('createdAt'), datetime):
+                updated_appointment['createdAt'] = updated_appointment['createdAt'].isoformat()
+        
+        return jsonify(updated_appointment)
+        
+    except Exception as e:
+        print(f"Error updating appointment: {e}")
+        return jsonify({'error': 'Failed to update appointment'}), 500
+
+@app.route('/api/appointments/<appointment_id>', methods=['DELETE'])
+def delete_appointment(appointment_id):
+    """Delete an appointment"""
+    try:
+        appointments_collection = db.get_collection('appointments')
+        result = appointments_collection.delete_one({'id': appointment_id})
+        
+        if result.deleted_count == 0:
+            return jsonify({'error': 'Appointment not found'}), 404
+        
+        return jsonify({'message': 'Appointment deleted successfully'})
+        
+    except Exception as e:
+        print(f"Error deleting appointment: {e}")
+        return jsonify({'error': 'Failed to delete appointment'}), 500
+
+# NEW: Triage Assessment Routes
+
+@app.route('/api/triage/assess', methods=['POST'])
+def submit_triage_assessment():
+    """Submit a triage assessment and get recommendations"""
+    try:
+        data = request.get_json()
+        
+        # Validate required fields
+        required_fields = ['symptoms', 'severity', 'age', 'gender']
+        for field in required_fields:
+            if field not in data:
+                return jsonify({'error': f'Missing required field: {field}'}), 400
+        
+        # Process triage logic
+        symptoms = data['symptoms'].lower()
+        severity = data['severity']
+        age = int(data['age'])
+        
+        # Determine urgency and priority
+        urgency = 'Low'
+        priority_score = 3
+        department = {'id': 'general', 'name': 'General Medicine', 'color': 'blue'}
+        estimated_wait = '45-60 minutes'
+        
+        # Critical symptoms
+        critical_symptoms = [
+            'chest pain', 'difficulty breathing', 'severe bleeding', 'unconscious',
+            'stroke', 'heart attack', 'severe head injury', 'severe burns'
+        ]
+        
+        # High priority symptoms
+        high_symptoms = [
+            'broken bone', 'severe pain', 'high fever', 'allergic reaction',
+            'vomiting blood', 'severe nausea'
+        ]
+        
+        # Check for critical conditions
+        if severity == 'critical' or any(symptom in symptoms for symptom in critical_symptoms):
+            urgency = 'Critical'
+            priority_score = 9
+            department = {'id': 'emergency', 'name': 'Emergency', 'color': 'red'}
+            estimated_wait = 'Immediate'
+        elif severity == 'severe' or any(symptom in symptoms for symptom in high_symptoms) or age > 65:
+            urgency = 'High'
+            priority_score = 7
+            estimated_wait = '15-30 minutes'
+        elif severity == 'moderate':
+            urgency = 'Medium'
+            priority_score = 5
+            estimated_wait = '30-45 minutes'
+        
+        # Determine appropriate department
+        if 'heart' in symptoms or 'chest' in symptoms:
+            department = {'id': 'cardiology', 'name': 'Cardiology', 'color': 'purple'}
+        elif 'bone' in symptoms or 'joint' in symptoms or 'fracture' in symptoms:
+            department = {'id': 'orthopedics', 'name': 'Orthopedics', 'color': 'orange'}
+        elif age < 18:
+            department = {'id': 'pediatrics', 'name': 'Pediatrics', 'color': 'green'}
+        
+        # Create assessment result
+        assessment = {
+            'id': str(uuid.uuid4()),
+            'urgency': urgency,
+            'priorityScore': priority_score,
+            'department': {
+                **department,
+                'description': f'Recommended based on your symptoms and medical history.'
+            },
+            'estimatedWait': estimated_wait,
+            'condition': data['symptoms'],
+            'summary': f'Based on your assessment, you have been assigned a {urgency.lower()} priority level. Your symptoms suggest you should be seen in the {department["name"]} department.',
+            'recommendations': [
+                'Seek immediate medical attention' if urgency == 'Critical' else 'Schedule an appointment with the recommended department',
+                'Bring a list of current medications',
+                'Arrive 15 minutes early for check-in',
+                'Do not delay seeking care' if urgency == 'Critical' else 'Continue monitoring symptoms'
+            ],
+            'patientData': data,
+            'createdAt': datetime.utcnow()
+        }
+        
+        # Save assessment to database
+        triage_collection = db.get_collection('triage_assessments')
+        assessment_to_save = assessment.copy()
+        triage_collection.insert_one(assessment_to_save)
+        
+        # Convert datetime for JSON response
+        assessment['createdAt'] = assessment['createdAt'].isoformat()
+        
+        return jsonify(assessment)
+        
+    except Exception as e:
+        print(f"Error processing triage assessment: {e}")
+        return jsonify({'error': 'Failed to process triage assessment'}), 500
+
+# NEW: Department and Doctor Routes
+
+@app.route('/api/departments', methods=['GET'])
+def get_departments():
+    """Get all departments"""
+    try:
+        departments = [
+            {'id': 'emergency', 'name': 'Emergency', 'color': 'red'},
+            {'id': 'general', 'name': 'General Medicine', 'color': 'blue'},
+            {'id': 'cardiology', 'name': 'Cardiology', 'color': 'purple'},
+            {'id': 'pediatrics', 'name': 'Pediatrics', 'color': 'green'},
+            {'id': 'orthopedics', 'name': 'Orthopedics', 'color': 'orange'}
+        ]
+        
+        return jsonify(departments)
+        
+    except Exception as e:
+        print(f"Error fetching departments: {e}")
+        return jsonify({'error': 'Failed to fetch departments'}), 500
+
+@app.route('/api/doctors', methods=['GET'])
+def get_doctors():
+    """Get all doctors by department"""
+    try:
+        doctors = [
+            {'id': 'all', 'name': 'All Doctors', 'department': 'all'},
+            {'id': 'dr_smith', 'name': 'Dr. Smith', 'department': 'emergency'},
+            {'id': 'dr_johnson', 'name': 'Dr. Johnson', 'department': 'general'},
+            {'id': 'dr_williams', 'name': 'Dr. Williams', 'department': 'cardiology'},
+            {'id': 'dr_brown', 'name': 'Dr. Brown', 'department': 'pediatrics'},
+            {'id': 'dr_davis', 'name': 'Dr. Davis', 'department': 'orthopedics'}
+        ]
+        
+        return jsonify(doctors)
+        
+    except Exception as e:
+        print(f"Error fetching doctors: {e}")
+        return jsonify({'error': 'Failed to fetch doctors'}), 500
+
+# EXISTING: Facility Routes (keeping your original functionality)
 
 @app.route('/api/facilities', methods=['GET'])
 def get_facilities():
@@ -417,14 +787,19 @@ def health_check():
 def get_system_stats():
     """Get basic system statistics"""
     try:
+        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        appointments_collection = db.get_collection('appointments')
+        
         stats = {
-            'total_facilities': db.get_collection('facilities').count_documents({}),
-            'total_patients': db.get_collection('patients').count_documents({}),
-            'total_doctors': db.get_collection('doctors').count_documents({}),
-            'total_consultations': db.get_collection('medical_consultations').count_documents({}),
-            'consultations_today': db.get_collection('medical_consultations').count_documents({
-                'Consultation_Date': {'$gte': datetime.now().replace(hour=0, minute=0, second=0)}
+            'total_appointments': appointments_collection.count_documents({}),
+            'appointments_today': appointments_collection.count_documents({
+                'dateTime': {'$gte': today}
             }),
+            'pending_appointments': appointments_collection.count_documents({'status': 'pending'}),
+            'confirmed_appointments': appointments_collection.count_documents({'status': 'confirmed'}),
+            'total_facilities': db.get_collection('facilities').count_documents({}),
+            'total_assessments': db.get_collection('triage_assessments').count_documents({}),
             'timestamp': datetime.utcnow().isoformat()
         }
         return jsonify(stats)
@@ -441,16 +816,23 @@ def internal_error(error):
     return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':
-    print("Starting MedRoute API Server...")
+    print("Starting Enhanced MedRoute API Server...")
     print("MongoDB Atlas connection:", "✅" if db.client else "❌")
     
     # Print available endpoints
     print("\nAvailable endpoints:")
-    print("GET  /api/facilities - Get all hospitals")
-    print("GET  /api/facilities/<id>/capacity - Get hospital capacity")
-    print("POST /api/emergency-hospitals - Find emergency hospitals")
-    print("GET  /api/health - Health check")
-    print("GET  /api/stats - System statistics")
+    print("GET    /api/appointments - Get appointments")
+    print("POST   /api/appointments - Create appointment")
+    print("PUT    /api/appointments/<id> - Update appointment")
+    print("DELETE /api/appointments/<id> - Delete appointment")
+    print("POST   /api/triage/assess - Submit triage assessment")
+    print("GET    /api/departments - Get departments")
+    print("GET    /api/doctors - Get doctors")
+    print("GET    /api/facilities - Get all hospitals")
+    print("GET    /api/facilities/<id>/capacity - Get hospital capacity")
+    print("POST   /api/emergency-hospitals - Find emergency hospitals")
+    print("GET    /api/health - Health check")
+    print("GET    /api/stats - System statistics")
     
     # Run the server
     port = int(os.environ.get('PORT', 5000))
