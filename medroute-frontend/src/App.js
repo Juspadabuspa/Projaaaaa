@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { AppointmentProvider } from './context/AppointmentContext';
 import { TriageProvider } from './context/TriageContext';
-import SchedulingDashboard from './components/admin/SchedulingDashboard';
+import { SchedulingDashboard } from './components/admin/SchedulingDashboard';
 import TriagePage from './components/pages/TriagePage';
 import ErrorBoundary from './components/ErrorBoundary';
 
