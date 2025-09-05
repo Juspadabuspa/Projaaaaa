@@ -10,7 +10,11 @@ import {
   AlertCircle,
   ChevronLeft,
   ChevronRight,
-  Search
+  Search,
+  Edit,
+  Save,
+  X,
+  RotateCcw
 } from 'lucide-react';
 
 // Helper functions (defined at top level to avoid recreation)
@@ -34,8 +38,419 @@ const getPriorityColor = (priority) => {
   return colors[priority] || '';
 };
 
-// Appointment Details Modal Component
-const AppointmentDetailsModal = ({ appointment, onClose }) => {
+// Edit Appointment Modal Component
+const EditAppointmentModal = ({ appointment, onClose, onSave, departments, doctors }) => {
+  const [formData, setFormData] = useState({
+    patientName: appointment.patientName,
+    patientId: appointment.patientId,
+    phone: appointment.phone,
+    department: appointment.department,
+    doctor: appointment.doctorId,
+    dateTime: appointment.dateTime.toISOString().slice(0, 16),
+    duration: appointment.duration,
+    condition: appointment.condition,
+    status: appointment.status,
+    priority: appointment.priority,
+    notes: appointment.notes,
+    insuranceProvider: appointment.insuranceProvider
+  });
+
+  const [errors, setErrors] = useState({});
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.patientName.trim()) newErrors.patientName = 'Patient name is required';
+    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
+    if (!formData.department) newErrors.department = 'Department is required';
+    if (!formData.doctor) newErrors.doctor = 'Doctor is required';
+    if (!formData.dateTime) newErrors.dateTime = 'Date and time is required';
+    if (!formData.condition.trim()) newErrors.condition = 'Condition is required';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      const updatedAppointment = {
+        ...appointment,
+        ...formData,
+        dateTime: new Date(formData.dateTime),
+        departmentName: departments.find(d => d.id === formData.department)?.name || '',
+        departmentColor: departments.find(d => d.id === formData.department)?.color || 'blue',
+        doctor: doctors.find(d => d.id === formData.doctor)?.name || ''
+      };
+      onSave(updatedAppointment);
+    }
+  };
+
+  const handleChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: null }));
+    }
+  };
+
+  const filteredDoctors = doctors.filter(doc => 
+    formData.department === 'all' || doc.department === formData.department || doc.id === 'all'
+  );
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-start mb-6">
+            <h3 className="text-xl font-bold text-gray-900">Edit Appointment</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 text-xl"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Patient Information */}
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-4">Patient Information</h4>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Patient Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.patientName}
+                      onChange={(e) => handleChange('patientName', e.target.value)}
+                      className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                        errors.patientName ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="Enter patient name"
+                    />
+                    {errors.patientName && (
+                      <p className="text-sm text-red-600 mt-1">{errors.patientName}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Patient ID
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.patientId}
+                      onChange={(e) => handleChange('patientId', e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter patient ID"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => handleChange('phone', e.target.value)}
+                      className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                        errors.phone ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="+27 123 456 7890"
+                    />
+                    {errors.phone && (
+                      <p className="text-sm text-red-600 mt-1">{errors.phone}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Insurance Provider
+                    </label>
+                    <select
+                      value={formData.insuranceProvider}
+                      onChange={(e) => handleChange('insuranceProvider', e.target.value)}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="None">None</option>
+                      <option value="Discovery">Discovery</option>
+                      <option value="Momentum">Momentum</option>
+                      <option value="Bonitas">Bonitas</option>
+                      <option value="Medscheme">Medscheme</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Appointment Details */}
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-4">Appointment Details</h4>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Department *
+                    </label>
+                    <select
+                      value={formData.department}
+                      onChange={(e) => handleChange('department', e.target.value)}
+                      className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                        errors.department ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                    >
+                      <option value="">Select Department</option>
+                      {departments.filter(d => d.id !== 'all').map(dept => (
+                        <option key={dept.id} value={dept.id}>{dept.name}</option>
+                      ))}
+                    </select>
+                    {errors.department && (
+                      <p className="text-sm text-red-600 mt-1">{errors.department}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Doctor *
+                    </label>
+                    <select
+                      value={formData.doctor}
+                      onChange={(e) => handleChange('doctor', e.target.value)}
+                      className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                        errors.doctor ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                    >
+                      <option value="">Select Doctor</option>
+                      {filteredDoctors.filter(d => d.id !== 'all').map(doc => (
+                        <option key={doc.id} value={doc.id}>{doc.name}</option>
+                      ))}
+                    </select>
+                    {errors.doctor && (
+                      <p className="text-sm text-red-600 mt-1">{errors.doctor}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Date & Time *
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={formData.dateTime}
+                      onChange={(e) => handleChange('dateTime', e.target.value)}
+                      className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                        errors.dateTime ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                    />
+                    {errors.dateTime && (
+                      <p className="text-sm text-red-600 mt-1">{errors.dateTime}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Duration (minutes)
+                    </label>
+                    <select
+                      value={formData.duration}
+                      onChange={(e) => handleChange('duration', parseInt(e.target.value))}
+                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value={15}>15 minutes</option>
+                      <option value={30}>30 minutes</option>
+                      <option value={45}>45 minutes</option>
+                      <option value={60}>1 hour</option>
+                      <option value={90}>1.5 hours</option>
+                      <option value={120}>2 hours</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Condition/Reason *
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.condition}
+                      onChange={(e) => handleChange('condition', e.target.value)}
+                      className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 ${
+                        errors.condition ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                      placeholder="Reason for visit"
+                    />
+                    {errors.condition && (
+                      <p className="text-sm text-red-600 mt-1">{errors.condition}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Status
+                      </label>
+                      <select
+                        value={formData.status}
+                        onChange={(e) => handleChange('status', e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                        <option value="no-show">No Show</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Priority
+                      </label>
+                      <select
+                        value={formData.priority}
+                        onChange={(e) => handleChange('priority', e.target.value)}
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Notes
+              </label>
+              <textarea
+                value={formData.notes}
+                onChange={(e) => handleChange('notes', e.target.value)}
+                rows={3}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="Additional notes or special instructions..."
+              />
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6 pt-6 border-t">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                <Save className="w-4 h-4" />
+                <span>Save Changes</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Reschedule Modal Component
+const RescheduleModal = ({ appointment, onClose, onReschedule }) => {
+  const [newDateTime, setNewDateTime] = useState(
+    appointment.dateTime.toISOString().slice(0, 16)
+  );
+  const [reason, setReason] = useState('');
+
+  const handleReschedule = (e) => {
+    e.preventDefault();
+    if (newDateTime) {
+      onReschedule({
+        ...appointment,
+        dateTime: new Date(newDateTime),
+        rescheduleReason: reason
+      });
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg max-w-md w-full">
+        <div className="p-6">
+          <div className="flex justify-between items-start mb-6">
+            <h3 className="text-xl font-bold text-gray-900">Reschedule Appointment</h3>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 text-xl"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+            <h4 className="font-medium text-gray-900">{appointment.patientName}</h4>
+            <p className="text-sm text-gray-600">{appointment.departmentName} - {appointment.doctor}</p>
+            <p className="text-sm text-gray-600">
+              Current: {appointment.dateTime.toLocaleDateString('en-ZA')} at {appointment.dateTime.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' })}
+            </p>
+          </div>
+
+          <form onSubmit={handleReschedule}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                New Date & Time *
+              </label>
+              <input
+                type="datetime-local"
+                value={newDateTime}
+                onChange={(e) => setNewDateTime(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Reason for Rescheduling
+              </label>
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                rows={3}
+                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="Optional reason for rescheduling..."
+              />
+            </div>
+
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span>Reschedule</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Appointment Details Modal Component (Updated)
+const AppointmentDetailsModal = ({ appointment, onClose, onEdit, onReschedule, onCancel }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -46,7 +461,7 @@ const AppointmentDetailsModal = ({ appointment, onClose }) => {
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 text-xl"
             >
-              ×
+              <X className="w-6 h-6" />
             </button>
           </div>
 
@@ -96,13 +511,24 @@ const AppointmentDetailsModal = ({ appointment, onClose }) => {
           </div>
 
           <div className="flex space-x-3 mt-6 pt-6 border-t">
-            <button className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-              Edit Appointment
+            <button 
+              onClick={onEdit}
+              className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <Edit className="w-4 h-4" />
+              <span>Edit</span>
             </button>
-            <button className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-              Reschedule
+            <button 
+              onClick={onReschedule}
+              className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Reschedule</span>
             </button>
-            <button className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+            <button 
+              onClick={onCancel}
+              className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
               Cancel
             </button>
           </div>
@@ -112,9 +538,57 @@ const AppointmentDetailsModal = ({ appointment, onClose }) => {
   );
 };
 
-// Appointment Card Component
-const AppointmentCard = ({ appointment }) => {
+// Appointment Card Component (Updated)
+const AppointmentCard = ({ appointment, onUpdate }) => {
   const [showDetails, setShowDetails] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [showReschedule, setShowReschedule] = useState(false);
+
+  const departments = [
+    { id: 'all', name: 'All Departments', color: 'gray' },
+    { id: 'emergency', name: 'Emergency', color: 'red' },
+    { id: 'general', name: 'General Medicine', color: 'blue' },
+    { id: 'cardiology', name: 'Cardiology', color: 'purple' },
+    { id: 'pediatrics', name: 'Pediatrics', color: 'green' },
+    { id: 'orthopedics', name: 'Orthopedics', color: 'orange' }
+  ];
+
+  const doctors = [
+    { id: 'all', name: 'All Doctors', department: 'all' },
+    { id: 'dr_smith', name: 'Dr. Smith', department: 'emergency' },
+    { id: 'dr_johnson', name: 'Dr. Johnson', department: 'general' },
+    { id: 'dr_williams', name: 'Dr. Williams', department: 'cardiology' },
+    { id: 'dr_brown', name: 'Dr. Brown', department: 'pediatrics' },
+    { id: 'dr_davis', name: 'Dr. Davis', department: 'orthopedics' }
+  ];
+
+  const handleEdit = () => {
+    setShowDetails(false);
+    setShowEdit(true);
+  };
+
+  const handleReschedule = () => {
+    setShowDetails(false);
+    setShowReschedule(true);
+  };
+
+  const handleCancel = () => {
+    if (window.confirm('Are you sure you want to cancel this appointment?')) {
+      const cancelledAppointment = { ...appointment, status: 'cancelled' };
+      onUpdate(cancelledAppointment);
+      setShowDetails(false);
+    }
+  };
+
+  const handleSave = (updatedAppointment) => {
+    onUpdate(updatedAppointment);
+    setShowEdit(false);
+  };
+
+  const handleRescheduleConfirm = (rescheduledAppointment) => {
+    onUpdate(rescheduledAppointment);
+    setShowReschedule(false);
+  };
 
   return (
     <>
@@ -145,7 +619,28 @@ const AppointmentCard = ({ appointment }) => {
       {showDetails && (
         <AppointmentDetailsModal 
           appointment={appointment} 
-          onClose={() => setShowDetails(false)} 
+          onClose={() => setShowDetails(false)}
+          onEdit={handleEdit}
+          onReschedule={handleReschedule}
+          onCancel={handleCancel}
+        />
+      )}
+
+      {showEdit && (
+        <EditAppointmentModal
+          appointment={appointment}
+          onClose={() => setShowEdit(false)}
+          onSave={handleSave}
+          departments={departments}
+          doctors={doctors}
+        />
+      )}
+
+      {showReschedule && (
+        <RescheduleModal
+          appointment={appointment}
+          onClose={() => setShowReschedule(false)}
+          onReschedule={handleRescheduleConfirm}
         />
       )}
     </>
@@ -183,6 +678,14 @@ export const SchedulingDashboard = () => {
   useEffect(() => {
     generateMockAppointments();
   }, [currentDate, selectedDepartment, selectedDoctor, viewMode]);
+
+  const handleAppointmentUpdate = (updatedAppointment) => {
+    setAppointments(prev => 
+      prev.map(apt => 
+        apt.id === updatedAppointment.id ? updatedAppointment : apt
+      )
+    );
+  };
 
   const generateMockAppointments = () => {
     setLoading(true);
@@ -342,7 +845,11 @@ export const SchedulingDashboard = () => {
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                       {timeSlotAppointments.map(appointment => (
-                        <AppointmentCard key={appointment.id} appointment={appointment} />
+                        <AppointmentCard 
+                          key={appointment.id} 
+                          appointment={appointment} 
+                          onUpdate={handleAppointmentUpdate}
+                        />
                       ))}
                     </div>
                   )}
@@ -396,7 +903,10 @@ export const SchedulingDashboard = () => {
                       {dayAppointments.map(appointment => (
                         <div
                           key={appointment.id}
-                          className={`text-xs p-1 mb-1 rounded border-l-2 ${getPriorityColor(appointment.priority)} bg-${appointment.departmentColor}-100 text-${appointment.departmentColor}-800`}
+                          className={`text-xs p-1 mb-1 rounded border-l-2 cursor-pointer hover:shadow-sm ${getPriorityColor(appointment.priority)} bg-${appointment.departmentColor}-100 text-${appointment.departmentColor}-800`}
+                          onClick={() => {
+                            // Handle click for week view appointments
+                          }}
                         >
                           <div className="font-medium truncate">{appointment.patientName}</div>
                           <div className="truncate">{appointment.condition}</div>
@@ -459,7 +969,10 @@ export const SchedulingDashboard = () => {
                   {dayAppointments.slice(0, 3).map(appointment => (
                     <div
                       key={appointment.id}
-                      className={`text-xs p-1 rounded bg-${appointment.departmentColor}-100 text-${appointment.departmentColor}-800 truncate`}
+                      className={`text-xs p-1 rounded bg-${appointment.departmentColor}-100 text-${appointment.departmentColor}-800 truncate cursor-pointer hover:shadow-sm`}
+                      onClick={() => {
+                        // Handle click for month view appointments
+                      }}
                     >
                       {appointment.patientName}
                     </div>
@@ -606,6 +1119,48 @@ export const SchedulingDashboard = () => {
           <div className="flex items-center">
             <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
               <Calendar className="w-4 h-4 text-blue-600" />
+            </div>
+            <div className="ml-3">
+              <div className="text-2xl font-bold text-gray-900">
+                {appointments.length}
+              </div>
+              <div className="text-sm text-gray-500">Total Appointments</div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+              <Users className="w-4 h-4 text-green-600" />
+            </div>
+            <div className="ml-3">
+              <div className="text-2xl font-bold text-gray-900">
+                {appointments.filter(apt => apt.status === 'confirmed').length}
+              </div>
+              <div className="text-sm text-gray-500">Confirmed</div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+              <Clock className="w-4 h-4 text-yellow-600" />
+            </div>
+            <div className="ml-3">
+              <div className="text-2xl font-bold text-gray-900">
+                {appointments.filter(apt => apt.status === 'pending').length}
+              </div>
+              <div className="text-sm text-gray-500">Pending</div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg shadow p-4">
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+              <AlertCircle className="w-4 h-4 text-red-600" />
             </div>
             <div className="ml-3">
               <div className="text-2xl font-bold text-gray-900">
