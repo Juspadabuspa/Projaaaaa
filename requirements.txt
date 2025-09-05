@@ -1,0 +1,19 @@
+# requirements.txt
+# Flask API Server Dependencies for MedRoute
+
+Flask==2.3.3
+Flask-CORS==4.0.0
+pymongo==4.5.0
+python-dotenv==1.0.0
+certifi==2023.7.22
+gunicorn==21.2.0
+
+# Optional: For enhanced error handling and logging
+Werkzeug==2.3.7
+
+# Optional: For API documentation (if you want to add Swagger)
+# flask-restx==1.1.0
+
+# Optional: For production deployment
+# redis==5.0.0
+# celery==5.3.4

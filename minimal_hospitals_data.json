@@ -1,0 +1,624 @@
+{
+  "facilities": [
+    {
+      "_id": 1,
+      "Name": "Charlotte Maxeke Johannesburg Academic Hospital",
+      "Ownership_type": "Public",
+      "Facility_type": "Hospital",
+      "Level_of_care": "Tertiary",
+      "Address": "17 Jubilee Rd, Parktown",
+      "City": "Johannesburg",
+      "Province": "Gauteng",
+      "Phone": "+27 11 488 4911",
+      "latitude": -26.1867,
+      "longitude": 28.0435,
+      "specialties": [
+        "Emergency",
+        "Cardiology",
+        "Neurology",
+        "Surgery"
+      ],
+      "has_emergency": true,
+      "rating": 4.2
+    },
+    {
+      "_id": 2,
+      "Name": "Chris Hani Baragwanath Academic Hospital",
+      "Ownership_type": "Public",
+      "Facility_type": "Hospital",
+      "Level_of_care": "Tertiary",
+      "Address": "26 Chris Hani Rd, Diepkloof, Soweto",
+      "City": "Johannesburg",
+      "Province": "Gauteng",
+      "Phone": "+27 11 933 0000",
+      "latitude": -26.2423,
+      "longitude": 27.9089,
+      "specialties": [
+        "Emergency",
+        "Trauma Surgery",
+        "Cardiology",
+        "Pediatrics"
+      ],
+      "has_emergency": true,
+      "rating": 4.1
+    },
+    {
+      "_id": 3,
+      "Name": "Steve Biko Academic Hospital",
+      "Ownership_type": "Public",
+      "Facility_type": "Hospital",
+      "Level_of_care": "Tertiary",
+      "Address": "Cnr Steve Biko & Sophie de Bruyn St, Pretoria",
+      "City": "Pretoria",
+      "Province": "Gauteng",
+      "Phone": "+27 12 354 1000",
+      "latitude": -25.7234,
+      "longitude": 28.1889,
+      "specialties": [
+        "Emergency",
+        "Neurology",
+        "Cardiology",
+        "Surgery"
+      ],
+      "has_emergency": true,
+      "rating": 3.9
+    },
+    {
+      "_id": 4,
+      "Name": "The Milpark Hospital",
+      "Ownership_type": "Private",
+      "Facility_type": "Hospital",
+      "Level_of_care": "Tertiary",
+      "Address": "9 Guild Rd, Parktown West",
+      "City": "Johannesburg",
+      "Province": "Gauteng",
+      "Phone": "+27 11 480 7000",
+      "latitude": -26.1723,
+      "longitude": 28.0234,
+      "specialties": [
+        "Emergency",
+        "Cardiology",
+        "Neurology",
+        "Surgery"
+      ],
+      "has_emergency": true,
+      "rating": 4.2
+    },
+    {
+      "_id": 5,
+      "Name": "Sandton Mediclinic",
+      "Ownership_type": "Private",
+      "Facility_type": "Hospital",
+      "Level_of_care": "Secondary",
+      "Address": "Peter Place, Sandton",
+      "City": "Johannesburg",
+      "Province": "Gauteng",
+      "Phone": "+27 11 709 2000",
+      "latitude": -26.1076,
+      "longitude": 28.0567,
+      "specialties": [
+        "Emergency",
+        "General Medicine",
+        "Surgery"
+      ],
+      "has_emergency": true,
+      "rating": 3.6
+    },
+    {
+      "_id": 6,
+      "Name": "Life Eugene Marais Hospital",
+      "Ownership_type": "Private",
+      "Facility_type": "Hospital",
+      "Level_of_care": "Secondary",
+      "Address": "529 Jochemus St, Erasmuskloof",
+      "City": "Pretoria",
+      "Province": "Gauteng",
+      "Phone": "+27 12 427 3000",
+      "latitude": -25.7889,
+      "longitude": 28.2234,
+      "specialties": [
+        "Emergency",
+        "General Medicine",
+        "Surgery"
+      ],
+      "has_emergency": true,
+      "rating": 4.4
+    },
+    {
+      "_id": 7,
+      "Name": "Helen Joseph Hospital",
+      "Ownership_type": "Public",
+      "Facility_type": "Hospital",
+      "Level_of_care": "Secondary",
+      "Address": "Perth Rd, Westdene",
+      "City": "Johannesburg",
+      "Province": "Gauteng",
+      "Phone": "+27 11 276 8000",
+      "latitude": -26.1456,
+      "longitude": 27.9834,
+      "specialties": [
+        "Emergency",
+        "General Medicine",
+        "Surgery"
+      ],
+      "has_emergency": true,
+      "rating": 4.5
+    },
+    {
+      "_id": 8,
+      "Name": "Kalafong Provincial Tertiary Hospital",
+      "Ownership_type": "Public",
+      "Facility_type": "Hospital",
+      "Level_of_care": "Tertiary",
+      "Address": "Jubilee Rd, Atteridgeville",
+      "City": "Pretoria",
+      "Province": "Gauteng",
+      "Phone": "+27 12 373 0911",
+      "latitude": -25.7645,
+      "longitude": 28.0456,
+      "specialties": [
+        "Emergency",
+        "General Medicine",
+        "Pediatrics"
+      ],
+      "has_emergency": true,
+      "rating": 4.5
+    },
+    {
+      "_id": 9,
+      "Name": "ER24 Sandton Emergency Centre",
+      "Ownership_type": "Private",
+      "Facility_type": "Emergency Center",
+      "Level_of_care": "Primary",
+      "Address": "Sandton City, Sandton",
+      "City": "Johannesburg",
+      "Province": "Gauteng",
+      "Phone": "+27 84 124 911",
+      "latitude": -26.1067,
+      "longitude": 28.0567,
+      "specialties": [
+        "Emergency"
+      ],
+      "has_emergency": true,
+      "rating": 4.1
+    },
+    {
+      "_id": 10,
+      "Name": "ER24 Pretoria Emergency Centre",
+      "Ownership_type": "Private",
+      "Facility_type": "Emergency Center",
+      "Level_of_care": "Primary",
+      "Address": "Brooklyn Mall, Pretoria",
+      "City": "Pretoria",
+      "Province": "Gauteng",
+      "Phone": "+27 84 124 911",
+      "latitude": -25.7634,
+      "longitude": 28.2345,
+      "specialties": [
+        "Emergency"
+      ],
+      "has_emergency": true,
+      "rating": 4.2
+    }
+  ],
+  "departments": [
+    {
+      "_id": 1,
+      "Facility_ID": 1,
+      "Name": "Emergency Department",
+      "Specialty": "Emergency",
+      "Capacity_beds": 28,
+      "Head_of_Department": "Dr. Nomsa Mthembu"
+    },
+    {
+      "_id": 2,
+      "Facility_ID": 1,
+      "Name": "Cardiology Department",
+      "Specialty": "Cardiology",
+      "Capacity_beds": 23,
+      "Head_of_Department": "Dr. David Botha"
+    },
+    {
+      "_id": 3,
+      "Facility_ID": 1,
+      "Name": "Neurology Department",
+      "Specialty": "Neurology",
+      "Capacity_beds": 36,
+      "Head_of_Department": "Dr. John Smith"
+    },
+    {
+      "_id": 4,
+      "Facility_ID": 2,
+      "Name": "Emergency Department",
+      "Specialty": "Emergency",
+      "Capacity_beds": 20,
+      "Head_of_Department": "Dr. Sarah Johnson"
+    },
+    {
+      "_id": 5,
+      "Facility_ID": 2,
+      "Name": "Trauma Surgery Department",
+      "Specialty": "Trauma Surgery",
+      "Capacity_beds": 39,
+      "Head_of_Department": "Dr. John Smith"
+    },
+    {
+      "_id": 6,
+      "Facility_ID": 2,
+      "Name": "Cardiology Department",
+      "Specialty": "Cardiology",
+      "Capacity_beds": 24,
+      "Head_of_Department": "Dr. Michael Nkomo"
+    },
+    {
+      "_id": 7,
+      "Facility_ID": 3,
+      "Name": "Emergency Department",
+      "Specialty": "Emergency",
+      "Capacity_beds": 25,
+      "Head_of_Department": "Dr. Sarah Botha"
+    },
+    {
+      "_id": 8,
+      "Facility_ID": 3,
+      "Name": "Neurology Department",
+      "Specialty": "Neurology",
+      "Capacity_beds": 46,
+      "Head_of_Department": "Dr. Michael Nkomo"
+    },
+    {
+      "_id": 9,
+      "Facility_ID": 3,
+      "Name": "Cardiology Department",
+      "Specialty": "Cardiology",
+      "Capacity_beds": 30,
+      "Head_of_Department": "Dr. David Patel"
+    },
+    {
+      "_id": 10,
+      "Facility_ID": 4,
+      "Name": "Emergency Department",
+      "Specialty": "Emergency",
+      "Capacity_beds": 28,
+      "Head_of_Department": "Dr. John Smith"
+    },
+    {
+      "_id": 11,
+      "Facility_ID": 4,
+      "Name": "Cardiology Department",
+      "Specialty": "Cardiology",
+      "Capacity_beds": 21,
+      "Head_of_Department": "Dr. Sarah Mthembu"
+    },
+    {
+      "_id": 12,
+      "Facility_ID": 4,
+      "Name": "Neurology Department",
+      "Specialty": "Neurology",
+      "Capacity_beds": 42,
+      "Head_of_Department": "Dr. Sarah Mthembu"
+    },
+    {
+      "_id": 13,
+      "Facility_ID": 5,
+      "Name": "Emergency Department",
+      "Specialty": "Emergency",
+      "Capacity_beds": 33,
+      "Head_of_Department": "Dr. Sarah Botha"
+    },
+    {
+      "_id": 14,
+      "Facility_ID": 5,
+      "Name": "General Medicine Department",
+      "Specialty": "General Medicine",
+      "Capacity_beds": 23,
+      "Head_of_Department": "Dr. Nomsa Patel"
+    },
+    {
+      "_id": 15,
+      "Facility_ID": 5,
+      "Name": "Surgery Department",
+      "Specialty": "Surgery",
+      "Capacity_beds": 22,
+      "Head_of_Department": "Dr. David Botha"
+    },
+    {
+      "_id": 16,
+      "Facility_ID": 6,
+      "Name": "Emergency Department",
+      "Specialty": "Emergency",
+      "Capacity_beds": 29,
+      "Head_of_Department": "Dr. Priya Nkomo"
+    },
+    {
+      "_id": 17,
+      "Facility_ID": 6,
+      "Name": "General Medicine Department",
+      "Specialty": "General Medicine",
+      "Capacity_beds": 39,
+      "Head_of_Department": "Dr. Nomsa Patel"
+    },
+    {
+      "_id": 18,
+      "Facility_ID": 6,
+      "Name": "Surgery Department",
+      "Specialty": "Surgery",
+      "Capacity_beds": 47,
+      "Head_of_Department": "Dr. Sarah Johnson"
+    },
+    {
+      "_id": 19,
+      "Facility_ID": 7,
+      "Name": "Emergency Department",
+      "Specialty": "Emergency",
+      "Capacity_beds": 36,
+      "Head_of_Department": "Dr. David Patel"
+    },
+    {
+      "_id": 20,
+      "Facility_ID": 7,
+      "Name": "General Medicine Department",
+      "Specialty": "General Medicine",
+      "Capacity_beds": 48,
+      "Head_of_Department": "Dr. David Botha"
+    },
+    {
+      "_id": 21,
+      "Facility_ID": 7,
+      "Name": "Surgery Department",
+      "Specialty": "Surgery",
+      "Capacity_beds": 47,
+      "Head_of_Department": "Dr. Nomsa Botha"
+    },
+    {
+      "_id": 22,
+      "Facility_ID": 8,
+      "Name": "Emergency Department",
+      "Specialty": "Emergency",
+      "Capacity_beds": 22,
+      "Head_of_Department": "Dr. Sarah Johnson"
+    },
+    {
+      "_id": 23,
+      "Facility_ID": 8,
+      "Name": "General Medicine Department",
+      "Specialty": "General Medicine",
+      "Capacity_beds": 21,
+      "Head_of_Department": "Dr. Nomsa Patel"
+    },
+    {
+      "_id": 24,
+      "Facility_ID": 8,
+      "Name": "Pediatrics Department",
+      "Specialty": "Pediatrics",
+      "Capacity_beds": 48,
+      "Head_of_Department": "Dr. Nomsa Johnson"
+    },
+    {
+      "_id": 25,
+      "Facility_ID": 9,
+      "Name": "Emergency Department",
+      "Specialty": "Emergency",
+      "Capacity_beds": 21,
+      "Head_of_Department": "Dr. Priya Smith"
+    },
+    {
+      "_id": 26,
+      "Facility_ID": 10,
+      "Name": "Emergency Department",
+      "Specialty": "Emergency",
+      "Capacity_beds": 41,
+      "Head_of_Department": "Dr. Nomsa Nkomo"
+    }
+  ],
+  "department_capacity": [
+    {
+      "_id": 1,
+      "Department_ID": 1,
+      "Current_patients": 13,
+      "Current_beds_available": 15,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008798"
+    },
+    {
+      "_id": 2,
+      "Department_ID": 2,
+      "Current_patients": 11,
+      "Current_beds_available": 12,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008816"
+    },
+    {
+      "_id": 3,
+      "Department_ID": 3,
+      "Current_patients": 26,
+      "Current_beds_available": 10,
+      "Status": "High",
+      "Last_updated": "2025-09-05T02:21:20.008818"
+    },
+    {
+      "_id": 4,
+      "Department_ID": 4,
+      "Current_patients": 11,
+      "Current_beds_available": 9,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008819"
+    },
+    {
+      "_id": 5,
+      "Department_ID": 5,
+      "Current_patients": 16,
+      "Current_beds_available": 23,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008820"
+    },
+    {
+      "_id": 6,
+      "Department_ID": 6,
+      "Current_patients": 13,
+      "Current_beds_available": 11,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008821"
+    },
+    {
+      "_id": 7,
+      "Department_ID": 7,
+      "Current_patients": 10,
+      "Current_beds_available": 15,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008822"
+    },
+    {
+      "_id": 8,
+      "Department_ID": 8,
+      "Current_patients": 23,
+      "Current_beds_available": 23,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008822"
+    },
+    {
+      "_id": 9,
+      "Department_ID": 9,
+      "Current_patients": 21,
+      "Current_beds_available": 9,
+      "Status": "High",
+      "Last_updated": "2025-09-05T02:21:20.008823"
+    },
+    {
+      "_id": 10,
+      "Department_ID": 10,
+      "Current_patients": 17,
+      "Current_beds_available": 11,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008824"
+    },
+    {
+      "_id": 11,
+      "Department_ID": 11,
+      "Current_patients": 11,
+      "Current_beds_available": 10,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008825"
+    },
+    {
+      "_id": 12,
+      "Department_ID": 12,
+      "Current_patients": 25,
+      "Current_beds_available": 17,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008826"
+    },
+    {
+      "_id": 13,
+      "Department_ID": 13,
+      "Current_patients": 15,
+      "Current_beds_available": 18,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008827"
+    },
+    {
+      "_id": 14,
+      "Department_ID": 14,
+      "Current_patients": 14,
+      "Current_beds_available": 9,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008830"
+    },
+    {
+      "_id": 15,
+      "Department_ID": 15,
+      "Current_patients": 9,
+      "Current_beds_available": 13,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008830"
+    },
+    {
+      "_id": 16,
+      "Department_ID": 16,
+      "Current_patients": 14,
+      "Current_beds_available": 15,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008831"
+    },
+    {
+      "_id": 17,
+      "Department_ID": 17,
+      "Current_patients": 25,
+      "Current_beds_available": 14,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008832"
+    },
+    {
+      "_id": 18,
+      "Department_ID": 18,
+      "Current_patients": 22,
+      "Current_beds_available": 25,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008833"
+    },
+    {
+      "_id": 19,
+      "Department_ID": 19,
+      "Current_patients": 25,
+      "Current_beds_available": 11,
+      "Status": "High",
+      "Last_updated": "2025-09-05T02:21:20.008834"
+    },
+    {
+      "_id": 20,
+      "Department_ID": 20,
+      "Current_patients": 34,
+      "Current_beds_available": 14,
+      "Status": "High",
+      "Last_updated": "2025-09-05T02:21:20.008834"
+    },
+    {
+      "_id": 21,
+      "Department_ID": 21,
+      "Current_patients": 30,
+      "Current_beds_available": 17,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008835"
+    },
+    {
+      "_id": 22,
+      "Department_ID": 22,
+      "Current_patients": 12,
+      "Current_beds_available": 10,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008836"
+    },
+    {
+      "_id": 23,
+      "Department_ID": 23,
+      "Current_patients": 10,
+      "Current_beds_available": 11,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008837"
+    },
+    {
+      "_id": 24,
+      "Department_ID": 24,
+      "Current_patients": 27,
+      "Current_beds_available": 21,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008837"
+    },
+    {
+      "_id": 25,
+      "Department_ID": 25,
+      "Current_patients": 14,
+      "Current_beds_available": 7,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008838"
+    },
+    {
+      "_id": 26,
+      "Department_ID": 26,
+      "Current_patients": 25,
+      "Current_beds_available": 16,
+      "Status": "Available",
+      "Last_updated": "2025-09-05T02:21:20.008839"
+    }
+  ]
+}
